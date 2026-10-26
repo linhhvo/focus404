@@ -48,7 +48,7 @@ fun AppNavigation() {
                 entry<Timer> { key -> TimerScreen(taskName = key.task, onEnd = { backStack.removeLastOrNull() }) }
                 entry<TaskInfo> { key ->
                     TaskInfoScreen(
-                        taskName = key.task,
+                        task = key.task,
                         onBack = { backStack.removeLastOrNull() })
                 }
 

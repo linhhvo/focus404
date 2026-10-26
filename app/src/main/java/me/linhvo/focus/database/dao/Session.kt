@@ -1,6 +1,7 @@
 package me.linhvo.focus.database.dao
 
 import androidx.room3.Dao
+import androidx.room3.Delete
 import androidx.room3.Embedded
 import androidx.room3.Entity
 import androidx.room3.ForeignKey
@@ -29,30 +30,23 @@ import kotlin.time.Instant
 )
 @Serializable
 data class Session(
-    @PrimaryKey(autoGenerate = true) val id: Long,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val startTime: Instant,
-    val stopTime: Instant,
+    val stopTime: Instant? = null,
     val taskName: String
-)
-
-data class TaskWithSessions(
-    @Embedded val task: Task,
-    @Relation(parentColumns = ["name"], entityColumns = ["taskName"])
-    val sessions: List<Session>
 )
 
 @Dao
 interface SessionDao {
+    @Query("select * from session")
+    suspend fun getAllSessions(): List<Session>
+
     @Insert
-    suspend fun addSession(session: Session)
+    suspend fun addSession(session: Session): Long
 
     @Update
     suspend fun updateSession(session: Session)
 
-    @Query("delete from session where id = :id")
-    suspend fun deleteSession(id: Long)
-
-    @Transaction
-    @Query("select * from task where name = :taskName")
-    suspend fun getSessionsByTask(taskName: String): TaskWithSessions
+    @Delete
+    suspend fun deleteSession(session: Session)
 }
