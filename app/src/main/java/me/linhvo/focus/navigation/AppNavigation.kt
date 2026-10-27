@@ -5,15 +5,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.serialization.Serializable
-import me.linhvo.focus.home.HomeScreen
 import me.linhvo.focus.database.dao.Task
+import me.linhvo.focus.home.HomeScreen
 import me.linhvo.focus.taskInfo.TaskInfoScreen
 import me.linhvo.focus.timer.TimerScreen
 
@@ -44,11 +44,20 @@ fun AppNavigation() {
                 }
             },
             entryProvider = entryProvider {
-                entry<Home> { HomeScreen() }
-                entry<Timer> { key -> TimerScreen(taskName = key.task, onEnd = { backStack.removeLastOrNull() }) }
+                entry<Home> {
+                    HomeScreen(
+                        navigateToTaskInfo = { backStack.add(TaskInfo(task = it)) },
+                        navigateToTimer = { backStack.add(Timer(task = it)) })
+                }
+                entry<Timer> { key ->
+                    TimerScreen(
+                        taskName = key.task,
+                        navigateToHome = { backStack.removeLastOrNull() })
+                }
                 entry<TaskInfo> { key ->
                     TaskInfoScreen(
                         task = key.task,
+                        navigateToTimer = { backStack.add(Timer(task = it)) },
                         onBack = { backStack.removeLastOrNull() })
                 }
 

@@ -1,12 +1,7 @@
 package me.linhvo.focus.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,7 +11,7 @@ import androidx.compose.ui.unit.dp
 import me.linhvo.focus.database.dao.Task
 
 @Composable
-fun TaskCard(index: Int, task: Task) {
+fun TaskCard(index: Int, task: Task, modifier: Modifier = Modifier) {
     val colors = listOf(
         Pair(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onPrimary),
         Pair(MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.onSecondary),
@@ -31,7 +26,7 @@ fun TaskCard(index: Int, task: Task) {
     val pos = index % colors.size
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(120.dp)
             .background(color = colors[pos].first),

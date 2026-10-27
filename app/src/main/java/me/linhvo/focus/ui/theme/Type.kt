@@ -1,6 +1,5 @@
 package me.linhvo.focus.ui.theme
 
-import android.R.attr.fontFamily
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -14,7 +13,8 @@ val bricolageFontFamily =
     FontFamily(
         Font(R.font.bricolage_grotesque_regular, FontWeight.Normal),
         Font(R.font.bricolage_grotesque_medium, FontWeight.Medium),
-        Font(R.font.bricolage_grotesque_semibold, FontWeight.SemiBold)
+        Font(R.font.bricolage_grotesque_semibold, FontWeight.SemiBold),
+        Font(R.font.bricolage_grotesque_bold, FontWeight.Bold)
     )
 
 val workSansFontFamily =
@@ -24,6 +24,13 @@ val workSansFontFamily =
     )
 
 val Typography = Typography(
+    displayLarge = TextStyle(
+        fontFamily = bricolageFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 250.sp,
+//        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp
+    ),
     headlineLarge = TextStyle(
         fontFamily = bricolageFontFamily,
         fontWeight = FontWeight.SemiBold,

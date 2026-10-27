@@ -1,5 +1,6 @@
 package me.linhvo.focus.home
 
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
@@ -13,14 +14,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import me.linhvo.focus.R
+import me.linhvo.focus.database.dao.Task
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
+fun HomeScreen(
+    navigateToTaskInfo: (Task) -> Unit,
+    navigateToTimer: (Task) -> Unit,
+    viewModel: HomeViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     if (uiState.shouldShowAddTaskForm) {
@@ -47,6 +55,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
             )
         }
 
+        val haptics = LocalHapticFeedback.current
         //TODO: need to sort by most recent task
         LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Fixed(2),
@@ -55,7 +64,19 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
             modifier = Modifier.fillMaxSize()
         ) {
             itemsIndexed(uiState.taskList) { index, task ->
-                TaskCard(index, task)
+                TaskCard(
+                    index,
+                    task,
+                    Modifier.combinedClickable(
+                        onClick = { navigateToTaskInfo(task) },
+                        onClickLabel = "open task info screen to manage task and view list of sessions",
+                        onLongClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            navigateToTimer(task)
+                        },
+                        onLongClickLabel = "start focus timer for the selected task"
+                    ),
+                )
             }
 
         }
