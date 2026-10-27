@@ -14,9 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import me.linhvo.focus.R
 import me.linhvo.focus.database.dao.Task
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 @Composable
-fun TaskInfoScreen(task: Task, navigateToTimer: (Task) -> Unit, onBack: () -> Unit) {
+fun TaskInfoScreen(task: Task, navigateToTimer: (Task, Instant) -> Unit, onBack: () -> Unit) {
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Top,
@@ -24,7 +26,11 @@ fun TaskInfoScreen(task: Task, navigateToTimer: (Task) -> Unit, onBack: () -> Un
     ) {
         Text(text = task.name, style = MaterialTheme.typography.headlineLarge)
         Row() {
-            OutlinedButton(onClick = { navigateToTimer(task) }) {
+            OutlinedButton(onClick = {
+                val startTime = Clock.System.now()
+                navigateToTimer(task, startTime)
+                //TODO: need to add a new session also
+            }) {
                 Icon(
                     painter = painterResource(R.drawable.add_session_icon),
                     contentDescription = "start session timer icon"

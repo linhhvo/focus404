@@ -1,8 +1,6 @@
 package me.linhvo.focus.repository
 
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.daysUntil
 import kotlinx.datetime.toLocalDateTime
 import me.linhvo.focus.database.dao.Session
 import me.linhvo.focus.database.dao.SessionDao
@@ -24,7 +22,7 @@ class SessionRepository @Inject constructor(val sessionDao: SessionDao) {
     suspend fun startSession(taskName: String, startTime: Instant): Long =
         sessionDao.addSession(Session(startTime = startTime, taskName = taskName))
 
-    suspend fun stopSession(session: Session) = sessionDao.updateSession(session)
+    suspend fun updateSession(session: Session) = sessionDao.updateSession(session)
 
     suspend fun deleteSession(session: Session) = sessionDao.deleteSession(session)
 }

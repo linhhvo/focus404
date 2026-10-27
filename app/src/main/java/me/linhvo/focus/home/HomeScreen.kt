@@ -22,11 +22,13 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import me.linhvo.focus.R
 import me.linhvo.focus.database.dao.Task
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 @Composable
 fun HomeScreen(
     navigateToTaskInfo: (Task) -> Unit,
-    navigateToTimer: (Task) -> Unit,
+    navigateToTimer: (Task, Instant) -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -72,7 +74,9 @@ fun HomeScreen(
                         onClickLabel = "open task info screen to manage task and view list of sessions",
                         onLongClick = {
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            navigateToTimer(task)
+                            val startTime = Clock.System.now()
+                            viewModel.startSession(task, startTime)
+                            navigateToTimer(task, startTime)
                         },
                         onLongClickLabel = "start focus timer for the selected task"
                     ),

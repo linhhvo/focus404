@@ -16,12 +16,14 @@ import me.linhvo.focus.database.dao.Task
 import me.linhvo.focus.home.HomeScreen
 import me.linhvo.focus.taskInfo.TaskInfoScreen
 import me.linhvo.focus.timer.TimerScreen
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 @Serializable
 data object Home : NavKey
 
 @Serializable
-data class Timer(val task: Task) : NavKey
+data class Timer(val task: Task, val startTime: Instant) : NavKey
 
 @Serializable
 data class TaskInfo(val task: Task) : NavKey
@@ -47,17 +49,18 @@ fun AppNavigation() {
                 entry<Home> {
                     HomeScreen(
                         navigateToTaskInfo = { backStack.add(TaskInfo(task = it)) },
-                        navigateToTimer = { backStack.add(Timer(task = it)) })
+                        navigateToTimer = { task, startTime -> backStack.add(Timer(task, startTime)) })
                 }
                 entry<Timer> { key ->
                     TimerScreen(
                         taskName = key.task,
+                        startTime = Clock.System.now(),
                         navigateToHome = { backStack.removeLastOrNull() })
                 }
                 entry<TaskInfo> { key ->
                     TaskInfoScreen(
                         task = key.task,
-                        navigateToTimer = { backStack.add(Timer(task = it)) },
+                        navigateToTimer = { task, startTime -> backStack.add(Timer(task, startTime)) },
                         onBack = { backStack.removeLastOrNull() })
                 }
 

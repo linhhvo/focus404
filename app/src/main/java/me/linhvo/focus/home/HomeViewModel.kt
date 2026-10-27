@@ -12,6 +12,7 @@ import me.linhvo.focus.repository.TaskRepository
 import javax.inject.Inject
 import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 data class HomeUiState(
     val taskList: List<Task> = emptyList(),
@@ -68,6 +69,13 @@ class HomeViewModel @Inject constructor(
     fun closeAddTaskForm() {
         _shouldShowAddTaskForm.value = false
     }
+
+    fun startSession(task: Task, startTime: Instant) {
+        viewModelScope.launch {
+            sessionRepository.startSession(task.name, startTime)
+        }
+    }
+
 
     init {
         viewModelScope.launch {
