@@ -1,18 +1,7 @@
 package me.linhvo.focus.database.dao
 
-import androidx.room3.Dao
-import androidx.room3.Delete
-import androidx.room3.Embedded
-import androidx.room3.Entity
-import androidx.room3.ForeignKey
+import androidx.room3.*
 import androidx.room3.ForeignKey.Companion.CASCADE
-import androidx.room3.Index
-import androidx.room3.Insert
-import androidx.room3.PrimaryKey
-import androidx.room3.Query
-import androidx.room3.Relation
-import androidx.room3.Transaction
-import androidx.room3.Update
 import kotlinx.serialization.Serializable
 import kotlin.time.Instant
 
@@ -38,6 +27,9 @@ data class Session(
 
 @Dao
 interface SessionDao {
+    @Query("select * from session where id = :id")
+    suspend fun getSessionById(id: Long): Session?
+
     @Query("select * from session")
     suspend fun getAllSessions(): List<Session>
 

@@ -55,7 +55,7 @@ fun TaskCard(index: Int, task: Task, modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.End
         ) {
             Text(
-                text = "${task.totalFocusDuration.inWholeHours}h${task.totalFocusDuration.inWholeMinutes}m",
+                text = "${task.totalFocusDuration.inWholeHours}h${task.totalFocusDuration.inWholeMinutes % 60}m",
                 style = MaterialTheme.typography.titleMedium,
                 color = colors[pos].second
             )

@@ -52,7 +52,7 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Today focus: ${uiState.todayFocus.inWholeHours}h${uiState.todayFocus.inWholeMinutes}m",
+                text = "Today focus: ${uiState.todayFocus.inWholeHours}h${uiState.todayFocus.inWholeMinutes % 60}m",
                 style = MaterialTheme.typography.headlineLarge,
             )
         }
@@ -75,7 +75,6 @@ fun HomeScreen(
                         onLongClick = {
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                             val startTime = Clock.System.now()
-                            viewModel.startSession(task, startTime)
                             navigateToTimer(task, startTime)
                         },
                         onLongClickLabel = "start focus timer for the selected task"

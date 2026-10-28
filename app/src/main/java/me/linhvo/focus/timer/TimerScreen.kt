@@ -8,45 +8,53 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
-import me.linhvo.focus.database.dao.Task
-import kotlin.time.Clock
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Instant
 
 @Composable
-fun TimerScreen(taskName: Task, startTime: Instant, navigateToHome: () -> Unit) {
+fun TimerScreen(
+    navigateToHome: () -> Unit,
+    viewModel: TimerViewModel = hiltViewModel()
+) {
     val context = LocalActivity.current
     val view = LocalView.current
     val window = context?.window ?: return
 
-    var elapsedTime by remember { mutableStateOf(Duration.ZERO) }
-    var displayTime by remember { mutableStateOf("") }
-    var isRunning = true
+    val displayTime = viewModel.displayTime.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         val windowInsetsController = WindowCompat.getInsetsController(window, view)
+        // hide status bar and navigation bar
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+        // system bars can be temporarily revealed by swiping from edge but will hide automatically
+        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+
+        // rotate screen to landscape
         context.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+
+        // keep display always on while timer is running
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        // reduce display brightness
         val layoutParams = window.attributes
         layoutParams.screenBrightness = 0.05f
         window.attributes = layoutParams
     }
 
-    LaunchedEffect(elapsedTime, isRunning) {
-        while (isRunning) {
-            elapsedTime = Clock.System.now() - startTime
-            val m = elapsedTime.inWholeMinutes % 60
-            displayTime = String.format("%02d:%02d", elapsedTime.inWholeHours, m)
+    LaunchedEffect(displayTime.value) {
+        while (true) {
+            viewModel.formatElapsedTime()
             delay(1.minutes)
         }
     }
@@ -56,17 +64,16 @@ fun TimerScreen(taskName: Task, startTime: Instant, navigateToHome: () -> Unit) 
             .fillMaxSize()
             .pointerInput(Unit) {
                 detectTapGestures(onDoubleTap = {
-                    //TODO: stop session
-                    isRunning = false
-                    navigateToHome()
+                    viewModel.stopSession()
                     context.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                     window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    navigateToHome()
                 })
             },
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = displayTime,
+            text = displayTime.value,
             style = MaterialTheme.typography.displayLarge,
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.align(Alignment.Center)

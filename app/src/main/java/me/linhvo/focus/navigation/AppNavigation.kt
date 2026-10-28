@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -16,6 +17,7 @@ import me.linhvo.focus.database.dao.Task
 import me.linhvo.focus.home.HomeScreen
 import me.linhvo.focus.taskInfo.TaskInfoScreen
 import me.linhvo.focus.timer.TimerScreen
+import me.linhvo.focus.timer.TimerViewModel
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -52,9 +54,12 @@ fun AppNavigation() {
                         navigateToTimer = { task, startTime -> backStack.add(Timer(task, startTime)) })
                 }
                 entry<Timer> { key ->
+                    val startTime = Clock.System.now()
+                    val viewModel = hiltViewModel<TimerViewModel, TimerViewModel.Factory>(
+                        creationCallback = { factory -> factory.create(key.task, startTime) }
+                    )
                     TimerScreen(
-                        taskName = key.task,
-                        startTime = Clock.System.now(),
+                        viewModel = viewModel,
                         navigateToHome = { backStack.removeLastOrNull() })
                 }
                 entry<TaskInfo> { key ->

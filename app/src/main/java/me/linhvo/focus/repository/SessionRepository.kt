@@ -10,6 +10,7 @@ import kotlin.time.Instant
 
 @Singleton
 class SessionRepository @Inject constructor(val sessionDao: SessionDao) {
+    suspend fun getSessionById(id: Long): Session? = sessionDao.getSessionById(id)
 
     suspend fun getSessionsByDate(requestDate: Instant): List<Session> {
         val localDate = requestDate.toLocalDateTime(TimeZone.currentSystemDefault()).date
