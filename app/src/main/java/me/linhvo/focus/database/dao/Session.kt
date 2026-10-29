@@ -2,6 +2,7 @@ package me.linhvo.focus.database.dao
 
 import androidx.room3.*
 import androidx.room3.ForeignKey.Companion.CASCADE
+import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 import kotlin.time.Instant
 
@@ -31,7 +32,7 @@ interface SessionDao {
     suspend fun getSessionById(id: Long): Session?
 
     @Query("select * from session")
-    suspend fun getAllSessions(): List<Session>
+    fun getAllSessions(): Flow<List<Session>>
 
     @Insert
     suspend fun addSession(session: Session): Long

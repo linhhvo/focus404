@@ -19,12 +19,13 @@ class TaskRepository @Inject constructor(private val taskDao: TaskDao) {
 
     suspend fun getSessionsByTask(taskName: String) = taskDao.getSessionsByTask(taskName)
 
-    suspend fun updateTotalFocusDuration(latestSession: Session) {
+    suspend fun updateTaskDetail(latestSession: Session) {
         val task = taskDao.getTaskByName(latestSession.taskName)
         if (task != null) {
             val updatedTask = task.copy(
                 totalFocusDuration = task.totalFocusDuration + (latestSession.stopTime?.minus(latestSession.startTime)
-                    ?: Duration.ZERO)
+                    ?: Duration.ZERO),
+                latestSessionEnd = latestSession.stopTime
             )
             taskDao.updateTask(updatedTask)
         } else {

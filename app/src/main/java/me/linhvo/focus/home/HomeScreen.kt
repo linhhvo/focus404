@@ -5,11 +5,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -37,74 +35,90 @@ fun HomeScreen(
         AddTaskDialog(onDismiss = viewModel::closeAddTaskForm, onSubmit = viewModel::addTask)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 80.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 30.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "Today focus: ${uiState.todayFocus.inWholeHours}h${uiState.todayFocus.inWholeMinutes % 60}m",
-                style = MaterialTheme.typography.headlineLarge,
+    val gridState = rememberLazyStaggeredGridState()
+
+    Scaffold(
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { viewModel.openAddTaskForm() },
+                shape = RoundedCornerShape(8.dp),
+                containerColor = MaterialTheme.colorScheme.inverseSurface,
+                icon = {
+                    Icon(
+                        painter = painterResource((R.drawable.plus_icon)),
+                        tint = MaterialTheme.colorScheme.inverseOnSurface,
+                        contentDescription = "plus icon"
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Add Task",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.inverseOnSurface
+                    )
+                }
             )
-        }
-
-        val haptics = LocalHapticFeedback.current
-        //TODO: need to sort by most recent task
-        LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Fixed(2),
-            verticalItemSpacing = 4.dp,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.fillMaxSize()
+        },
+        floatingActionButtonPosition = FabPosition.End
+    ) { _ ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 70.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
         ) {
-            itemsIndexed(uiState.taskList) { index, task ->
-                TaskCard(
-                    index,
-                    task,
-                    Modifier.combinedClickable(
-                        onClick = { navigateToTaskInfo(task) },
-                        onClickLabel = "open task info screen to manage task and view list of sessions",
-                        onLongClick = {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            val startTime = Clock.System.now()
-                            navigateToTimer(task, startTime)
-                        },
-                        onLongClickLabel = "start focus timer for the selected task"
-                    ),
-                )
-            }
-
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd) {
-        ExtendedFloatingActionButton(
-            modifier = Modifier.padding(vertical = 40.dp, horizontal = 30.dp),
-            onClick = { viewModel.openAddTaskForm() },
-            shape = RoundedCornerShape(8.dp),
-            containerColor = MaterialTheme.colorScheme.inverseSurface,
-            icon = {
-                Icon(
-                    painter = painterResource((R.drawable.plus_icon)),
-                    tint = MaterialTheme.colorScheme.inverseOnSurface,
-                    contentDescription = "plus icon"
-                )
-            },
-            text = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 5.dp, start = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
                 Text(
-                    text = "Add Task",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.inverseOnSurface
+                    text = "Today focus: ${uiState.todayFocus.inWholeHours}h${uiState.todayFocus.inWholeMinutes % 60}m",
+                    style = MaterialTheme.typography.headlineLarge,
                 )
             }
-        )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 30.dp, start = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "${uiState.sinceLastSession.inWholeHours}h${uiState.sinceLastSession.inWholeMinutes % 60}m since last session",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+
+            val haptics = LocalHapticFeedback.current
+            LazyVerticalStaggeredGrid(
+                state = gridState,
+                columns = StaggeredGridCells.Fixed(2),
+                verticalItemSpacing = 4.dp,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                itemsIndexed(uiState.taskList) { index, task ->
+                    TaskCard(
+                        index,
+                        task,
+                        Modifier.combinedClickable(
+                            onClick = { navigateToTaskInfo(task) },
+                            onClickLabel = "open task info screen to manage task and view list of sessions",
+                            onLongClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                val startTime = Clock.System.now()
+                                navigateToTimer(task, startTime)
+                            },
+                            onLongClickLabel = "start focus timer for the selected task"
+                        ),
+                    )
+                }
+
+            }
+        }
     }
 }

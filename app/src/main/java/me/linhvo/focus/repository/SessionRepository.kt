@@ -1,5 +1,7 @@
 package me.linhvo.focus.repository
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import me.linhvo.focus.database.dao.Session
@@ -12,11 +14,13 @@ import kotlin.time.Instant
 class SessionRepository @Inject constructor(val sessionDao: SessionDao) {
     suspend fun getSessionById(id: Long): Session? = sessionDao.getSessionById(id)
 
-    suspend fun getSessionsByDate(requestDate: Instant): List<Session> {
+    fun getSessionsByDate(requestDate: Instant): Flow<List<Session>> {
         val localDate = requestDate.toLocalDateTime(TimeZone.currentSystemDefault()).date
         val allSessions = sessionDao.getAllSessions()
-        return allSessions.filter { s ->
-            s.stopTime?.toLocalDateTime(TimeZone.currentSystemDefault())?.date?.equals(localDate) ?: false
+        return allSessions.onEach { s ->
+            s.filter {
+                it.stopTime?.toLocalDateTime(TimeZone.currentSystemDefault())?.date?.equals(localDate) ?: false
+            }
         }
     }
 

@@ -16,6 +16,7 @@ import kotlin.time.Duration
 data class HomeUiState(
     val taskList: List<Task> = emptyList(),
     val todayFocus: Duration = Duration.ZERO,
+    val sinceLastSession: Duration = Duration.ZERO,
     val shouldShowAddTaskForm: Boolean = false,
     val errorMessage: String? = null,
 )
@@ -27,6 +28,7 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
     private val _errorMessage: MutableStateFlow<String?> = MutableStateFlow(null)
     private val _todayFocus: MutableStateFlow<Duration> = MutableStateFlow(Duration.ZERO)
+    private val _sinceLastSession: MutableStateFlow<Duration> = MutableStateFlow(Duration.ZERO)
     private val _shouldShowAddTaskForm = MutableStateFlow(false)
 
 
@@ -35,11 +37,12 @@ class HomeViewModel @Inject constructor(
             taskRepository.getAllTasks(),
             _errorMessage,
             _todayFocus,
-            _shouldShowAddTaskForm
-        ) { taskList, error, todayFocus, shouldShowForm ->
+            _shouldShowAddTaskForm, _sinceLastSession
+        ) { taskList, error, todayFocus, shouldShowForm, sinceLastSession ->
             HomeUiState(
-                taskList = taskList,
+                taskList = taskList.sortedByDescending { it.latestSessionEnd },
                 todayFocus = todayFocus,
+                sinceLastSession = sinceLastSession,
                 shouldShowAddTaskForm = shouldShowForm,
                 errorMessage = error
             )
@@ -71,9 +74,15 @@ class HomeViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val todaySessions = sessionRepository.getSessionsByDate(Clock.System.now())
-            _todayFocus.value = todaySessions.fold(Duration.ZERO) { acc, session ->
-                acc + (session.stopTime?.minus(session.startTime) ?: Duration.ZERO)
+            sessionRepository.getSessionsByDate(Clock.System.now()).collect { todaySessions ->
+                _todayFocus.value = todaySessions.fold(Duration.ZERO) { acc, session ->
+                    acc + (session.stopTime?.minus(session.startTime) ?: Duration.ZERO)
+                }
+
+                if (todaySessions.isNotEmpty()) {
+                    val mostRecentSession = todaySessions.sortedByDescending { it.stopTime }.first()
+                    mostRecentSession.stopTime?.let { _sinceLastSession.value = Clock.System.now() - it }
+                }
             }
         }
 

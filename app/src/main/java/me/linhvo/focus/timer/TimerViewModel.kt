@@ -47,7 +47,7 @@ class TimerViewModel @AssistedInject constructor(
             try {
                 val session = _currentSession.value!!.copy(stopTime = stopTime)
                 sessionRepository.updateSession(session)
-                taskRepository.updateTotalFocusDuration(session)
+                taskRepository.updateTaskDetail(session)
             } catch (e: Exception) {
                 throw Exception("failed to stop session: ${e.message}")
             }
