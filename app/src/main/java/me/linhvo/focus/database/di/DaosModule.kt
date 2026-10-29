@@ -4,7 +4,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import me.linhvo.focus.database.LocalDatabase
+import me.linhvo.focus.database.LocalDatabaseV1
 import me.linhvo.focus.database.dao.SessionDao
 import me.linhvo.focus.database.dao.TaskDao
 
@@ -12,8 +12,8 @@ import me.linhvo.focus.database.dao.TaskDao
 @InstallIn(SingletonComponent::class)
 object DaosModule {
     @Provides
-    fun provideTaskDao(database: LocalDatabase): TaskDao = database.taskDao()
+    fun provideTaskDao(database: LocalDatabaseV1): TaskDao = database.taskDao()
 
     @Provides
-    fun provideSessionDao(database: LocalDatabase): SessionDao = database.sessionDao()
+    fun provideSessionDao(database: LocalDatabaseV1): SessionDao = database.sessionDao()
 }

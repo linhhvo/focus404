@@ -19,14 +19,30 @@ import kotlin.time.toDuration
         Session::class
     ],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 
 @ColumnTypeConverters(Converters::class)
-abstract class LocalDatabase : RoomDatabase() {
+abstract class LocalDatabaseV1 : RoomDatabase() {
     abstract fun taskDao(): TaskDao
     abstract fun sessionDao(): SessionDao
 }
+
+//@Database(
+//    entities = [
+//        Task::class,
+//        Session::class
+//    ],
+//    version = 2,
+//    autoMigrations = [AutoMigration(from = 1, to = 2)],
+//    exportSchema = true
+//)
+
+//@ColumnTypeConverters(Converters::class)
+//abstract class LocalDatabaseV2 : RoomDatabase() {
+//    abstract fun taskDao(): TaskDao
+//    abstract fun sessionDao(): SessionDao
+//}
 
 internal class Converters {
     @ColumnTypeConverter

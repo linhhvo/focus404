@@ -7,7 +7,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import me.linhvo.focus.database.LocalDatabase
+import me.linhvo.focus.database.LocalDatabaseV1
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
@@ -15,10 +15,10 @@ import javax.inject.Singleton
 object DatabaseModule {
     @Provides
     @Singleton
-    fun provideLocalDatabase(@ApplicationContext context: Context): LocalDatabase =
+    fun provideLocalDatabase(@ApplicationContext context: Context): LocalDatabaseV1 =
         Room.databaseBuilder(
             context = context,
-            klass = LocalDatabase::class.java,
+            klass = LocalDatabaseV1::class.java,
             name = "focus-db"
         ).build()
 }
