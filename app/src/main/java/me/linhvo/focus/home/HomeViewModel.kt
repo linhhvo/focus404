@@ -56,10 +56,14 @@ class HomeViewModel @Inject constructor(
 
     fun addTask(taskName: String) {
         viewModelScope.launch {
-            try {
-                taskRepository.addTask(taskName)
-            } catch (e: Exception) {
-                _errorMessage.value = e.message
+            if (taskName.isNotBlank()) {
+                try {
+                    taskRepository.addTask(taskName)
+                } catch (e: Exception) {
+                    _errorMessage.value = e.message
+                }
+            } else {
+                _errorMessage.value = "task name cannot be empty"
             }
         }
     }

@@ -40,5 +40,5 @@ interface TaskDao {
 
     @Transaction
     @Query("select * from task where name = :taskName")
-    suspend fun getSessionsByTask(taskName: String): TaskWithSessions
+    fun getSessionsByTask(taskName: String): Flow<TaskWithSessions>
 }

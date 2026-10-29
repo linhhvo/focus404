@@ -20,10 +20,14 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
+import me.linhvo.focus.database.dao.Task
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 @Composable
 fun TimerScreen(
+    task: Task,
+    startTime: Instant,
     navigateToHome: () -> Unit,
     viewModel: TimerViewModel = hiltViewModel()
 ) {
@@ -50,11 +54,11 @@ fun TimerScreen(
         val layoutParams = window.attributes
         layoutParams.screenBrightness = 0.05f
         window.attributes = layoutParams
-    }
 
-    LaunchedEffect(displayTime.value) {
+        // start new session
+        viewModel.startSession(task, startTime)
         while (true) {
-            viewModel.formatElapsedTime()
+            viewModel.formatElapsedTime(startTime)
             delay(1.minutes)
         }
     }

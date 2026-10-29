@@ -49,6 +49,8 @@ fun AddTaskDialog(onSubmit: (String) -> Unit, onDismiss: () -> Unit) {
                     }),
                     colors = OutlinedTextFieldDefaults.colors()
                         .copy(
+                            unfocusedIndicatorColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onBackground,
                             focusedIndicatorColor = MaterialTheme.colorScheme.onBackground,
                             focusedLabelColor = MaterialTheme.colorScheme.onBackground,
                             cursorColor = MaterialTheme.colorScheme.onBackground

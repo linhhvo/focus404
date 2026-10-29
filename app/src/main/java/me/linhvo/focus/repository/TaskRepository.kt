@@ -17,7 +17,7 @@ class TaskRepository @Inject constructor(private val taskDao: TaskDao) {
 
     suspend fun deleteTask(task: Task) = taskDao.deleteTask(task)
 
-    suspend fun getSessionsByTask(taskName: String) = taskDao.getSessionsByTask(taskName)
+    fun getSessionsByTask(taskName: String) = taskDao.getSessionsByTask(taskName)
 
     suspend fun updateTaskDetail(latestSession: Session) {
         val task = taskDao.getTaskByName(latestSession.taskName)
