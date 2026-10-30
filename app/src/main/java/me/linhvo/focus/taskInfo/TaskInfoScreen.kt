@@ -32,7 +32,7 @@ fun TaskInfoScreen(
         viewModel.getSessionList(task)
     }
 
-    Scaffold(modifier = Modifier.padding(20.dp)) { innerPadding ->
+    Scaffold { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -40,8 +40,18 @@ fun TaskInfoScreen(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            Text(text = task.name, style = MaterialTheme.typography.headlineLarge)
-            Row(modifier = Modifier.padding(vertical = 20.dp)) {
+
+            Text(
+                text = task.name,
+                style = MaterialTheme.typography.headlineLarge,
+                modifier = Modifier.padding(top = 20.dp, start = 20.dp, bottom = 5.dp)
+            )
+            Text(
+                text = "Total focus: ${task.totalFocusDuration.inWholeHours}h${task.totalFocusDuration.inWholeMinutes % 60}m",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(start = 20.dp)
+            )
+            Row(modifier = Modifier.padding(20.dp)) {
                 OutlinedButton(
                     shape = RoundedCornerShape(6.dp),
                     border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.inverseSurface),
@@ -62,7 +72,8 @@ fun TaskInfoScreen(
                     Text(
                         text = "Start session",
                         style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(start = 6.dp)
+                        modifier = Modifier.padding(start = 6.dp),
+                        color = MaterialTheme.colorScheme.onBackground
                     )
 
                 }
@@ -72,26 +83,44 @@ fun TaskInfoScreen(
                     border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.inverseSurface),
                     colors = ButtonDefaults.outlinedButtonColors()
                         .copy(contentColor = MaterialTheme.colorScheme.onBackground),
-                    onClick = { /*TODO: delete task*/ },
+                    onClick = {
+                        viewModel.deleteTask(task)
+                        onBack()
+                    },
                     contentPadding = PaddingValues(horizontal = 15.dp, vertical = 12.dp),
                     modifier = Modifier.padding(start = 10.dp)
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.delete_icon),
                         contentDescription = "delete task icon",
-                        modifier = Modifier.size(15.dp)
+                        modifier = Modifier.size(15.dp),
+                        tint = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
                         text = "Delete task",
                         style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(start = 6.dp)
+                        modifier = Modifier.padding(start = 6.dp),
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
 
+            if (sessions.value.isNotEmpty()) {
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(top = 20.dp)
+                )
+            } else {
+                Text(
+                    text = "No session yet.",
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(start = 20.dp)
+                )
+            }
+
             LazyColumn {
                 items(sessions.value) { s ->
-                    SessionCard(s)
+                    SessionCard(session = s, deleteSession = viewModel::deleteSession)
                 }
             }
         }
