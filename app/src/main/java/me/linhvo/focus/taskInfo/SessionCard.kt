@@ -9,14 +9,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import me.linhvo.focus.R
 import me.linhvo.focus.database.dao.Session
+import me.linhvo.focus.database.dao.Task
 import kotlin.time.Duration
 
 @Composable
-fun SessionCard(session: Session, deleteSession: (Session) -> Unit) {
+fun SessionCard(task: Task, session: Session, deleteSession: suspend (Task, Session) -> Unit) {
     val start = session.startTime.toLocalDateTime(TimeZone.currentSystemDefault())
     val stop = session.stopTime?.toLocalDateTime(TimeZone.currentSystemDefault())
     val duration = session.stopTime?.minus(session.startTime) ?: Duration.ZERO
@@ -24,14 +26,15 @@ fun SessionCard(session: Session, deleteSession: (Session) -> Unit) {
     val dismissState = rememberSwipeToDismissBoxState()
     val scope = rememberCoroutineScope()
 
-
     SwipeToDismissBox(
         state = dismissState,
         modifier = Modifier.fillMaxWidth(),
         enableDismissFromEndToStart = false,
         onDismiss = { direction ->
             if (direction == SwipeToDismissBoxValue.StartToEnd) {
-                deleteSession(session)
+                scope.launch {
+                    deleteSession(task, session)
+                }
             }
         },
         backgroundContent = {
@@ -39,7 +42,7 @@ fun SessionCard(session: Session, deleteSession: (Session) -> Unit) {
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.onTertiary)
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = 20.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
                 Icon(
@@ -53,12 +56,14 @@ fun SessionCard(session: Session, deleteSession: (Session) -> Unit) {
     ) {
         Column(
             modifier = Modifier
-                .background(MaterialTheme.colorScheme.surface)
+                .background(MaterialTheme.colorScheme.background)
                 .fillMaxSize()
                 .padding(horizontal = 20.dp, vertical = 10.dp)
         ) {
+            val startTime = String.format("%02d:%02d", start.hour, start.minute)
+            val stopTime = String.format("%02d:%02d", stop?.hour ?: 0, stop?.minute ?: 0)
             Text(
-                text = "${start.date} ${start.hour}:${start.minute} - ${stop?.hour}:${stop?.minute}",
+                text = "${start.date} $startTime - $stopTime",
                 style = MaterialTheme.typography.titleSmall
             )
             Text(

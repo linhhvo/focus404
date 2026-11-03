@@ -1,6 +1,5 @@
 package me.linhvo.focus.repository
 
-import me.linhvo.focus.database.dao.Session
 import me.linhvo.focus.database.dao.Task
 import me.linhvo.focus.database.dao.TaskDao
 import javax.inject.Inject
@@ -13,23 +12,27 @@ class TaskRepository @Inject constructor(private val taskDao: TaskDao) {
 
     fun getAllTasks() = taskDao.getAllTasks()
 
-    suspend fun updateTask(task: Task) = taskDao.updateTask(task)
-
     suspend fun deleteTask(task: Task) = taskDao.deleteTask(task)
 
-    fun getSessionsByTask(taskName: String) = taskDao.getSessionsByTask(taskName)
+    fun getSessionsByTask(taskName: String) = taskDao.getSessionsByTaskStream(taskName)
 
-    suspend fun updateTaskDetail(newSession: Session) {
-        val task = taskDao.getTaskByName(newSession.taskName)
-        if (task != null) {
+    suspend fun updateTaskDetail(task: Task) {
+        val taskWithSessions = taskDao.getSessionsByTask(task.name)
+        if (taskWithSessions != null && taskWithSessions.sessions.isNotEmpty()) {
+            val latestSession = taskWithSessions.sessions.maxBy { it.id }
+
             val updatedTask = task.copy(
-                totalFocusDuration = task.totalFocusDuration + (newSession.stopTime?.minus(newSession.startTime)
-                    ?: Duration.ZERO),
-                latestSessionEnd = newSession.stopTime
+                totalFocusDuration = taskWithSessions.sessions.fold(Duration.ZERO) { acc, session ->
+                    acc + (session.stopTime?.minus(
+                        session.startTime
+                    ) ?: Duration.ZERO)
+                },
+                latestSessionEnd = latestSession.stopTime
             )
             taskDao.updateTask(updatedTask)
         } else {
-            throw NoSuchElementException("task is not found")
+            val updatedTask = task.copy(totalFocusDuration = Duration.ZERO, latestSessionEnd = null)
+            taskDao.updateTask(updatedTask)
         }
     }
 }

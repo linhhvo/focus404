@@ -9,7 +9,9 @@ import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridS
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -30,6 +32,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     if (uiState.shouldShowAddTaskForm) {
         AddTaskDialog(onDismiss = viewModel::closeAddTaskForm, onSubmit = viewModel::addTask)
@@ -37,7 +40,24 @@ fun HomeScreen(
 
     val gridState = rememberLazyStaggeredGridState()
 
+    LaunchedEffect(uiState.errorMessage) {
+        if (uiState.errorMessage != null) {
+            val result = snackbarHostState.showSnackbar(
+                message = uiState.errorMessage!!,
+                withDismissAction = true,
+                duration = SnackbarDuration.Long
+            )
+
+            if (result == SnackbarResult.Dismissed) {
+                viewModel.resetErrorMessage()
+            }
+        }
+    }
+
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { viewModel.openAddTaskForm() },
@@ -59,8 +79,9 @@ fun HomeScreen(
                 }
             )
         },
-        floatingActionButtonPosition = FabPosition.End
-    ) { _ ->
+        floatingActionButtonPosition = FabPosition.End,
+
+        ) { _ ->
         Column(
             modifier = Modifier
                 .fillMaxSize()

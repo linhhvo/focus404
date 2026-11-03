@@ -76,17 +76,25 @@ class HomeViewModel @Inject constructor(
         _shouldShowAddTaskForm.value = false
     }
 
+    fun resetErrorMessage() {
+        _errorMessage.value = null
+    }
+
     init {
         viewModelScope.launch {
-            sessionRepository.getSessionsByDate(Clock.System.now()).collect { todaySessions ->
-                _todayFocus.value = todaySessions.fold(Duration.ZERO) { acc, session ->
-                    acc + (session.stopTime?.minus(session.startTime) ?: Duration.ZERO)
-                }
+            try {
+                sessionRepository.getSessionsByDate(Clock.System.now()).collect { todaySessions ->
+                    _todayFocus.value = todaySessions.fold(Duration.ZERO) { acc, session ->
+                        acc + (session.stopTime?.minus(session.startTime) ?: Duration.ZERO)
+                    }
 
-                if (todaySessions.isNotEmpty()) {
-                    val mostRecentSession = todaySessions.sortedByDescending { it.stopTime }.first()
-                    mostRecentSession.stopTime?.let { _sinceLastSession.value = Clock.System.now() - it }
+                    if (todaySessions.isNotEmpty()) {
+                        val mostRecentSession = todaySessions.sortedByDescending { it.stopTime }.first()
+                        mostRecentSession.stopTime?.let { _sinceLastSession.value = Clock.System.now() - it }
+                    }
                 }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: e.toString()
             }
         }
 

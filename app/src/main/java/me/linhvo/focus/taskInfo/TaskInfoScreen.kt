@@ -8,6 +8,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -26,13 +28,41 @@ fun TaskInfoScreen(
     onBack: () -> Unit,
     viewModel: TaskInfoViewModel = hiltViewModel()
 ) {
-    val sessions = viewModel.sessions.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    if (uiState.showConfirmation) {
+        ConfirmationDialog(onDismiss = { viewModel.hideDialog() }, onConfirmation = {
+            viewModel.deleteTask(task)
+            viewModel.hideDialog()
+            onBack()
+        })
+    }
+
+    LaunchedEffect(uiState.errorMessage) {
+        if (uiState.errorMessage != null) {
+            val result = snackbarHostState.showSnackbar(
+                message = uiState.errorMessage!!,
+                withDismissAction = true,
+                duration = SnackbarDuration.Long
+            )
+
+            if (result == SnackbarResult.Dismissed) {
+                viewModel.resetErrorMessage()
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.getSessionList(task)
     }
 
-    Scaffold { innerPadding ->
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -84,8 +114,12 @@ fun TaskInfoScreen(
                     colors = ButtonDefaults.outlinedButtonColors()
                         .copy(contentColor = MaterialTheme.colorScheme.onBackground),
                     onClick = {
-                        viewModel.deleteTask(task)
-                        onBack()
+                        if (uiState.sessions.isNotEmpty()) {
+                            viewModel.showDialog()
+                        } else {
+                            viewModel.deleteTask(task)
+                            onBack()
+                        }
                     },
                     contentPadding = PaddingValues(horizontal = 15.dp, vertical = 12.dp),
                     modifier = Modifier.padding(start = 10.dp)
@@ -105,7 +139,7 @@ fun TaskInfoScreen(
                 }
             }
 
-            if (sessions.value.isNotEmpty()) {
+            if (uiState.sessions.isNotEmpty()) {
                 HorizontalDivider(
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(top = 20.dp)
@@ -119,8 +153,8 @@ fun TaskInfoScreen(
             }
 
             LazyColumn {
-                items(sessions.value) { s ->
-                    SessionCard(session = s, deleteSession = viewModel::deleteSession)
+                items(uiState.sessions) { s ->
+                    SessionCard(task = task, session = s, deleteSession = viewModel::deleteSession)
                 }
             }
         }

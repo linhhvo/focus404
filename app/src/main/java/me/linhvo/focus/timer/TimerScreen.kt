@@ -68,7 +68,7 @@ fun TimerScreen(
             .fillMaxSize()
             .pointerInput(Unit) {
                 detectTapGestures(onDoubleTap = {
-                    viewModel.stopSession()
+                    viewModel.stopSession(task)
                     context.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                     window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                     navigateToHome()

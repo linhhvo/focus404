@@ -1,6 +1,5 @@
 package me.linhvo.focus.timer
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,7 +20,7 @@ import kotlin.time.Instant
 class TimerViewModel @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
     private val sessionRepository: SessionRepository,
-    private val taskRepository: TaskRepository,
+    private val taskRepository: TaskRepository
 ) : ViewModel() {
     private val _currentSession: MutableStateFlow<Session?> = MutableStateFlow(null)
     private var sessionStarted = false
@@ -40,17 +39,16 @@ class TimerViewModel @Inject constructor(
             viewModelScope.launch {
                 val id = sessionRepository.startSession(task.name, startTime)
                 _currentSession.value = sessionRepository.getSessionById(id)
-                Log.d("focus_log", "start new session: $id")
             }
         }
     }
 
-    fun stopSession(stopTime: Instant = Clock.System.now()) {
+    fun stopSession(task: Task, stopTime: Instant = Clock.System.now()) {
         appScope.launch {
             try {
                 val session = _currentSession.value!!.copy(stopTime = stopTime)
                 sessionRepository.updateSession(session)
-                taskRepository.updateTaskDetail(session)
+                taskRepository.updateTaskDetail(task)
             } catch (e: Exception) {
                 throw Exception("failed to stop session: ${e.message}")
             }
