@@ -32,7 +32,7 @@ interface SessionDao {
     suspend fun getSessionById(id: Long): Session?
 
     @Query("select * from session")
-    fun getAllSessions(): Flow<List<Session>>
+    fun observeAllSessions(): Flow<List<Session>>
 
     @Insert
     suspend fun addSession(session: Session): Long

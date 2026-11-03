@@ -10,11 +10,12 @@ import kotlin.time.Duration
 class TaskRepository @Inject constructor(private val taskDao: TaskDao) {
     suspend fun addTask(taskName: String) = taskDao.addTask(Task(name = taskName))
 
-    fun getAllTasks() = taskDao.getAllTasks()
+    fun observeTask(taskName: String) = taskDao.observeTask(taskName)
+    fun observeAllTasks() = taskDao.observeAllTasks()
 
     suspend fun deleteTask(task: Task) = taskDao.deleteTask(task)
 
-    fun getSessionsByTask(taskName: String) = taskDao.getSessionsByTaskStream(taskName)
+    fun observeSessionsByTask(taskName: String) = taskDao.observeSessionsByTask(taskName)
 
     suspend fun updateTaskDetail(task: Task) {
         val taskWithSessions = taskDao.getSessionsByTask(task.name)

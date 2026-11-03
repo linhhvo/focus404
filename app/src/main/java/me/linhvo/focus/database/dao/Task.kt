@@ -24,10 +24,10 @@ data class TaskWithSessions(
 @Dao
 interface TaskDao {
     @Query("select * from task where name = :taskName")
-    suspend fun getTaskByName(taskName: String): Task?
+    fun observeTask(taskName: String): Flow<Task?>
 
     @Query("select * from task")
-    fun getAllTasks(): Flow<List<Task>>
+    fun observeAllTasks(): Flow<List<Task>>
 
     @Insert
     suspend fun addTask(task: Task)
@@ -40,7 +40,7 @@ interface TaskDao {
 
     @Transaction
     @Query("select * from task where name = :taskName")
-    fun getSessionsByTaskStream(taskName: String): Flow<TaskWithSessions?>
+    fun observeSessionsByTask(taskName: String): Flow<TaskWithSessions?>
 
     @Transaction
     @Query("select * from task where name = :taskName")

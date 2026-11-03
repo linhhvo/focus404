@@ -16,6 +16,7 @@ import me.linhvo.focus.repository.TaskRepository
 import javax.inject.Inject
 
 data class TaskInfoUiState(
+    val taskState: Task? = null,
     val sessions: List<Session> = emptyList(),
     val showConfirmation: Boolean = false,
     val errorMessage: String? = null
@@ -28,21 +29,31 @@ class TaskInfoViewModel @Inject constructor(
     private val taskRepository: TaskRepository
 ) : ViewModel() {
 
+    private val _task: MutableStateFlow<Task?> = MutableStateFlow(null)
     private val _sessions: MutableStateFlow<List<Session>> = MutableStateFlow(emptyList())
     private val _errorMessage: MutableStateFlow<String?> = MutableStateFlow(null)
     private val _showConfirmation = MutableStateFlow(false)
 
     val uiState: StateFlow<TaskInfoUiState> =
-        combine(_sessions, _errorMessage, _showConfirmation) { sessions, errorMessage, showConfirmation ->
+        combine(_task, _sessions, _errorMessage, _showConfirmation) { task, sessions, errorMessage, showConfirmation ->
             TaskInfoUiState(
+                taskState = task,
                 sessions, showConfirmation, errorMessage
+
             )
         }.catch {
             emit(TaskInfoUiState(errorMessage = it.message))
         }.stateIn(scope = viewModelScope, started = WhileSubscribed(5000), initialValue = TaskInfoUiState())
 
+    suspend fun getTaskState(task: Task) {
+        taskRepository.observeTask(task.name).collect {
+            Log.d("focus_log", "observe task: $it")
+            _task.value = it
+        }
+    }
+
     suspend fun getSessionList(task: Task) {
-        taskRepository.getSessionsByTask(task.name).collect {
+        taskRepository.observeSessionsByTask(task.name).collect {
             it?.let { _sessions.value = it.sessions }
         }
     }

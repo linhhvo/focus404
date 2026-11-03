@@ -34,7 +34,7 @@ class HomeViewModel @Inject constructor(
 
     val uiState: StateFlow<HomeUiState> =
         combine(
-            taskRepository.getAllTasks(),
+            taskRepository.observeAllTasks(),
             _errorMessage,
             _todayFocus,
             _shouldShowAddTaskForm, _sinceLastSession
@@ -83,7 +83,7 @@ class HomeViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             try {
-                sessionRepository.getSessionsByDate(Clock.System.now()).collect { todaySessions ->
+                sessionRepository.observeSessionsByDate(Clock.System.now()).collect { todaySessions ->
                     _todayFocus.value = todaySessions.fold(Duration.ZERO) { acc, session ->
                         acc + (session.stopTime?.minus(session.startTime) ?: Duration.ZERO)
                     }

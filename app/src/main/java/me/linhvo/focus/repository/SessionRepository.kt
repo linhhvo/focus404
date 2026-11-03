@@ -16,9 +16,9 @@ class SessionRepository @Inject constructor(val sessionDao: SessionDao) {
     suspend fun getSessionById(id: Long): Session? = sessionDao.getSessionById(id)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun getSessionsByDate(requestDate: Instant): Flow<List<Session>> {
+    fun observeSessionsByDate(requestDate: Instant): Flow<List<Session>> {
         val localDate = requestDate.toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val allSessions = sessionDao.getAllSessions()
+        val allSessions = sessionDao.observeAllSessions()
         return allSessions.transformLatest { s ->
             val filtered = s.filter {
                 it.stopTime?.toLocalDateTime(TimeZone.currentSystemDefault())?.date?.equals(localDate) ?: false

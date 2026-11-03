@@ -34,7 +34,7 @@ fun TaskInfoScreen(
 
     if (uiState.showConfirmation) {
         ConfirmationDialog(onDismiss = { viewModel.hideDialog() }, onConfirmation = {
-            viewModel.deleteTask(task)
+            viewModel.deleteTask(uiState.taskState!!)
             viewModel.hideDialog()
             onBack()
         })
@@ -58,6 +58,10 @@ fun TaskInfoScreen(
         viewModel.getSessionList(task)
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.getTaskState(task)
+    }
+
     Scaffold(
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
@@ -72,12 +76,12 @@ fun TaskInfoScreen(
         ) {
 
             Text(
-                text = task.name,
+                text = uiState.taskState?.name ?: "",
                 style = MaterialTheme.typography.headlineLarge,
                 modifier = Modifier.padding(top = 20.dp, start = 20.dp, bottom = 5.dp)
             )
             Text(
-                text = "Total focus: ${task.totalFocusDuration.inWholeHours}h${task.totalFocusDuration.inWholeMinutes % 60}m",
+                text = "Total focus: ${uiState.taskState?.totalFocusDuration?.inWholeHours}h${(uiState.taskState?.totalFocusDuration?.inWholeMinutes ?: 0) % 60}m",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(start = 20.dp)
             )
@@ -89,7 +93,7 @@ fun TaskInfoScreen(
                         .copy(contentColor = MaterialTheme.colorScheme.onBackground),
                     onClick = {
                         val startTime = Clock.System.now()
-                        navigateToTimer(task, startTime)
+                        navigateToTimer(uiState.taskState ?: task, startTime)
                     },
                     contentPadding = PaddingValues(horizontal = 15.dp, vertical = 12.dp),
                 ) {
@@ -117,7 +121,7 @@ fun TaskInfoScreen(
                         if (uiState.sessions.isNotEmpty()) {
                             viewModel.showDialog()
                         } else {
-                            viewModel.deleteTask(task)
+                            viewModel.deleteTask(uiState.taskState ?: task)
                             onBack()
                         }
                     },
@@ -154,7 +158,7 @@ fun TaskInfoScreen(
 
             LazyColumn {
                 items(uiState.sessions) { s ->
-                    SessionCard(task = task, session = s, deleteSession = viewModel::deleteSession)
+                    SessionCard(task = uiState.taskState ?: task, session = s, deleteSession = viewModel::deleteSession)
                 }
             }
         }
