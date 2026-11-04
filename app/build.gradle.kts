@@ -1,5 +1,3 @@
-import java.lang.module.ModuleFinder.compose
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -29,7 +27,7 @@ android {
         release {
             optimization {
                 enable = true
-                packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
+//                packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
             }
         }
     }
