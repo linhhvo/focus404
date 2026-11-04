@@ -1,0 +1,102 @@
+package me.linhvo.focus404.home
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
+import kotlinx.coroutines.launch
+import me.linhvo.focus404.database.dao.Task
+import me.linhvo.focus404.repository.SessionRepository
+import me.linhvo.focus404.repository.TaskRepository
+import javax.inject.Inject
+import kotlin.time.Clock
+import kotlin.time.Duration
+
+data class HomeUiState(
+    val taskList: List<Task> = emptyList(),
+    val todayFocus: Duration = Duration.ZERO,
+    val sinceLastSession: Duration = Duration.ZERO,
+    val shouldShowAddTaskForm: Boolean = false,
+    val errorMessage: String? = null,
+)
+
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val taskRepository: TaskRepository,
+    private val sessionRepository: SessionRepository
+) : ViewModel() {
+    private val _errorMessage: MutableStateFlow<String?> = MutableStateFlow(null)
+    private val _todayFocus: MutableStateFlow<Duration> = MutableStateFlow(Duration.ZERO)
+    private val _sinceLastSession: MutableStateFlow<Duration> = MutableStateFlow(Duration.ZERO)
+    private val _shouldShowAddTaskForm = MutableStateFlow(false)
+
+
+    val uiState: StateFlow<HomeUiState> =
+        combine(
+            taskRepository.observeAllTasks(),
+            _errorMessage,
+            _todayFocus,
+            _shouldShowAddTaskForm, _sinceLastSession
+        ) { taskList, error, todayFocus, shouldShowForm, sinceLastSession ->
+            HomeUiState(
+                taskList = taskList.sortedByDescending { it.latestSessionEnd },
+                todayFocus = todayFocus,
+                sinceLastSession = sinceLastSession,
+                shouldShowAddTaskForm = shouldShowForm,
+                errorMessage = error
+            )
+        }.catch {
+            emit(HomeUiState(errorMessage = it.message))
+        }.stateIn(
+            scope = viewModelScope,
+            started = WhileSubscribed(5000),
+            initialValue = HomeUiState()
+        )
+
+    fun addTask(taskName: String) {
+        viewModelScope.launch {
+            if (taskName.isNotBlank()) {
+                try {
+                    taskRepository.addTask(taskName)
+                } catch (e: Exception) {
+                    _errorMessage.value = e.message
+                }
+            } else {
+                _errorMessage.value = "task name cannot be empty"
+            }
+        }
+    }
+
+    fun openAddTaskForm() {
+        _shouldShowAddTaskForm.value = true
+    }
+
+    fun closeAddTaskForm() {
+        _shouldShowAddTaskForm.value = false
+    }
+
+    fun resetErrorMessage() {
+        _errorMessage.value = null
+    }
+
+    init {
+        viewModelScope.launch {
+            try {
+                sessionRepository.observeSessionsByDate(Clock.System.now()).collect { todaySessions ->
+                    _todayFocus.value = todaySessions.fold(Duration.ZERO) { acc, session ->
+                        acc + (session.stopTime?.minus(session.startTime) ?: Duration.ZERO)
+                    }
+
+                    if (todaySessions.isNotEmpty()) {
+                        val mostRecentSession = todaySessions.sortedByDescending { it.stopTime }.first()
+                        mostRecentSession.stopTime?.let { _sinceLastSession.value = Clock.System.now() - it }
+                    }
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: e.toString()
+            }
+        }
+
+    }
+}

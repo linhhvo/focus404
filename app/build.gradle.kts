@@ -1,3 +1,5 @@
+import java.lang.module.ModuleFinder.compose
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -8,13 +10,13 @@ plugins {
 }
 
 android {
-    namespace = "me.linhvo.focus"
+    namespace = "me.linhvo.focus404"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "me.linhvo.focus"
+        applicationId = "me.linhvo.focus404"
         minSdk = 37
         targetSdk = 37
         versionCode = 1

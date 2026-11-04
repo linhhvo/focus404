@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "focus"
+rootProject.name = "focus404"
 include(":app")
