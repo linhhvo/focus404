@@ -23,144 +23,160 @@ import kotlin.time.Instant
 
 @Composable
 fun TaskInfoScreen(
-    task: Task,
-    navigateToTimer: (Task, Instant) -> Unit,
-    onBack: () -> Unit,
-    viewModel: TaskInfoViewModel = hiltViewModel()
+	task: Task,
+	navigateToTimer: (Task, Instant) -> Unit,
+	onBack: () -> Unit,
+	viewModel: TaskInfoViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+	val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val snackbarHostState = remember { SnackbarHostState() }
+	val snackbarHostState = remember { SnackbarHostState() }
 
-    if (uiState.showConfirmation) {
-        ConfirmationDialog(onDismiss = { viewModel.hideDialog() }, onConfirmation = {
-            viewModel.deleteTask(uiState.taskState!!)
-            viewModel.hideDialog()
-            onBack()
-        })
-    }
+	if (uiState.showConfirmation) {
+		ConfirmationDialog(onDismiss = { viewModel.hideConfirmationDialog() }, onConfirmation = {
+			viewModel.deleteTask(uiState.taskState!!)
+			viewModel.hideConfirmationDialog()
+			onBack()
+		})
+	}
 
-    LaunchedEffect(uiState.errorMessage) {
-        if (uiState.errorMessage != null) {
-            val result = snackbarHostState.showSnackbar(
-                message = uiState.errorMessage!!,
-                withDismissAction = true,
-                duration = SnackbarDuration.Long
-            )
+	if (uiState.targetEditSession != null) {
+		EditSessionForm(
+			onDismiss = viewModel::hideSessionEditForm,
+			targetSession = uiState.targetEditSession!!,
+			onSubmit = {
+				viewModel.updateSession(task, it)
+				viewModel.hideSessionEditForm()
+			}
+		)
+	}
 
-            if (result == SnackbarResult.Dismissed) {
-                viewModel.resetErrorMessage()
-            }
-        }
-    }
+	LaunchedEffect(uiState.errorMessage) {
+		if (uiState.errorMessage != null) {
+			val result = snackbarHostState.showSnackbar(
+				message = uiState.errorMessage!!,
+				withDismissAction = true,
+				duration = SnackbarDuration.Long
+			)
 
-    LaunchedEffect(Unit) {
-        viewModel.getSessionList(task)
-    }
+			if (result == SnackbarResult.Dismissed) {
+				viewModel.resetErrorMessage()
+			}
+		}
+	}
 
-    LaunchedEffect(Unit) {
-        viewModel.getTaskState(task)
-    }
+	LaunchedEffect(Unit) {
+		viewModel.getSessionList(task)
+	}
 
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.Start
-        ) {
+	LaunchedEffect(Unit) {
+		viewModel.getTaskState(task)
+	}
 
-            Text(
-                text = uiState.taskState?.name ?: "",
-                style = MaterialTheme.typography.headlineLarge,
-                modifier = Modifier.padding(top = 20.dp, start = 20.dp, bottom = 5.dp)
-            )
-            Text(
-                text = "Total focus: ${uiState.taskState?.totalFocusDuration?.inWholeHours}h${(uiState.taskState?.totalFocusDuration?.inWholeMinutes ?: 0) % 60}m",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(start = 20.dp)
-            )
-            Row(modifier = Modifier.padding(20.dp)) {
-                OutlinedButton(
-                    shape = RoundedCornerShape(6.dp),
-                    border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.inverseSurface),
-                    colors = ButtonDefaults.outlinedButtonColors()
-                        .copy(contentColor = MaterialTheme.colorScheme.onBackground),
-                    onClick = {
-                        val startTime = Clock.System.now()
-                        navigateToTimer(uiState.taskState ?: task, startTime)
-                    },
-                    contentPadding = PaddingValues(horizontal = 15.dp, vertical = 12.dp),
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.add_session_icon),
-                        contentDescription = "start session timer icon",
-                        tint = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(15.dp)
-                    )
-                    Text(
-                        text = "Start session",
-                        style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(start = 6.dp),
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
+	Scaffold(
+		snackbarHost = {
+			SnackbarHost(hostState = snackbarHostState)
+		}
+	) { innerPadding ->
+		Column(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(innerPadding),
+			verticalArrangement = Arrangement.Top,
+			horizontalAlignment = Alignment.Start
+		) {
 
-                }
+			Text(
+				text = uiState.taskState?.name ?: "",
+				style = MaterialTheme.typography.headlineLarge,
+				modifier = Modifier.padding(top = 20.dp, start = 20.dp, bottom = 5.dp)
+			)
+			Text(
+				text = "Total focus: ${uiState.taskState?.totalFocusDuration?.inWholeHours}h${(uiState.taskState?.totalFocusDuration?.inWholeMinutes ?: 0) % 60}m",
+				style = MaterialTheme.typography.titleMedium,
+				modifier = Modifier.padding(start = 20.dp)
+			)
+			Row(modifier = Modifier.padding(20.dp)) {
+				OutlinedButton(
+					shape = RoundedCornerShape(6.dp),
+					border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.inverseSurface),
+					colors = ButtonDefaults.outlinedButtonColors()
+						.copy(contentColor = MaterialTheme.colorScheme.onBackground),
+					onClick = {
+						val startTime = Clock.System.now()
+						navigateToTimer(uiState.taskState ?: task, startTime)
+					},
+					contentPadding = PaddingValues(horizontal = 15.dp, vertical = 12.dp),
+				) {
+					Icon(
+						painter = painterResource(R.drawable.add_session_icon),
+						contentDescription = "start session timer icon",
+						tint = MaterialTheme.colorScheme.onBackground,
+						modifier = Modifier.size(15.dp)
+					)
+					Text(
+						text = "Start session",
+						style = MaterialTheme.typography.labelMedium,
+						modifier = Modifier.padding(start = 6.dp),
+						color = MaterialTheme.colorScheme.onBackground
+					)
 
-                OutlinedButton(
-                    shape = RoundedCornerShape(6.dp),
-                    border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.inverseSurface),
-                    colors = ButtonDefaults.outlinedButtonColors()
-                        .copy(contentColor = MaterialTheme.colorScheme.onBackground),
-                    onClick = {
-                        if (uiState.sessions.isNotEmpty()) {
-                            viewModel.showDialog()
-                        } else {
-                            viewModel.deleteTask(uiState.taskState ?: task)
-                            onBack()
-                        }
-                    },
-                    contentPadding = PaddingValues(horizontal = 15.dp, vertical = 12.dp),
-                    modifier = Modifier.padding(start = 10.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.delete_icon),
-                        contentDescription = "delete task icon",
-                        modifier = Modifier.size(15.dp),
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                    Text(
-                        text = "Delete task",
-                        style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(start = 6.dp),
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-            }
+				}
 
-            if (uiState.sessions.isNotEmpty()) {
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(top = 20.dp)
-                )
-            } else {
-                Text(
-                    text = "No session yet.",
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.padding(start = 20.dp)
-                )
-            }
+				OutlinedButton(
+					shape = RoundedCornerShape(6.dp),
+					border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.inverseSurface),
+					colors = ButtonDefaults.outlinedButtonColors()
+						.copy(contentColor = MaterialTheme.colorScheme.onBackground),
+					onClick = {
+						if (uiState.sessions.isNotEmpty()) {
+							viewModel.showConfirmationDialog()
+						} else {
+							viewModel.deleteTask(uiState.taskState ?: task)
+							onBack()
+						}
+					},
+					contentPadding = PaddingValues(horizontal = 15.dp, vertical = 12.dp),
+					modifier = Modifier.padding(start = 10.dp)
+				) {
+					Icon(
+						painter = painterResource(R.drawable.delete_icon),
+						contentDescription = "delete task icon",
+						modifier = Modifier.size(15.dp),
+						tint = MaterialTheme.colorScheme.onBackground
+					)
+					Text(
+						text = "Delete task",
+						style = MaterialTheme.typography.labelMedium,
+						modifier = Modifier.padding(start = 6.dp),
+						color = MaterialTheme.colorScheme.onBackground
+					)
+				}
+			}
 
-            LazyColumn {
-                items(uiState.sessions) { s ->
-                    SessionCard(task = uiState.taskState ?: task, session = s, deleteSession = viewModel::deleteSession)
-                }
-            }
-        }
-    }
+			if (uiState.sessions.isNotEmpty()) {
+				HorizontalDivider(
+					color = MaterialTheme.colorScheme.onBackground,
+					modifier = Modifier.padding(top = 20.dp)
+				)
+			} else {
+				Text(
+					text = "No session yet.",
+					style = MaterialTheme.typography.labelLarge,
+					modifier = Modifier.padding(start = 20.dp)
+				)
+			}
+
+			LazyColumn {
+				items(uiState.sessions) { s ->
+					SessionCard(
+						task = uiState.taskState ?: task,
+						session = s,
+						deleteSession = viewModel::deleteSession,
+						editSession = viewModel::showSessionEditForm
+					)
+				}
+			}
+		}
+	}
 }
